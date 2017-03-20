@@ -79,8 +79,10 @@ class SimpleRouter {
 
   run(mountFn, errorFn) {
     this.unListen = history.listen((location) => {
-      this.render(location).then(component => mountFn(component));
-    }).catch(err => errorFn(err));
+      this.render(location)
+        .then(component => mountFn(component))
+        .catch(err => errorFn(err));
+    });
   }
 
   destroy() {
