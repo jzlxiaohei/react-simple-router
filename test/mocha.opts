@@ -1,0 +1,7 @@
+--require babel-register
+--require ignore-styles
+--require test/setup.js
+--recursive
+--ui bdd
+--colors
+--inline-diffs
