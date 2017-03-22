@@ -9,7 +9,8 @@ type RouteConfig = {
   fetchComponent?: () => Promise<React.Component>,
   component?: React.Component,
   onEnter?:() => void,
-  onLeave?:() => void
+  onLeave?:() => void,
+  Container?: React.Component | Array<React.Component>
 }
 
 type Location = { pathname:string, search: string };
@@ -40,21 +41,36 @@ class SimpleRouter {
     return this;
   }
 
-  replace = (location: Location) => {
-    if (!(location && location.pathname)) {
-      throw new Error('pathname should be provided');
+  // replace = (location: Location) => {
+  //   if (!(location && location.pathname)) {
+  //     throw new Error('pathname should be provided');
+  //   }
+  //   this.history.replace(location);
+  // }
+
+  // navTo = (location: Location) => {
+  //   if (!(location && location.pathname)) {
+  //     throw new Error('pathname should be provided');
+  //   }
+  //   this.history.push(location);
+  // }
+
+  run(mountFn, errorFn, { ignoreCurrent = false } = {}) {
+    this.unListen = this.history.listen((location) => {
+      this._runByLocation(location, mountFn, errorFn);
+    });
+    if (!ignoreCurrent) {
+      this._runByLocation(this.history.location, mountFn, errorFn);
     }
-    this.history.replace(location);
   }
 
-  navTo = (location: Location) => {
-    if (!(location && location.pathname)) {
-      throw new Error('pathname should be provided');
+  destroy() {
+    if (this.unListen) {
+      this.unListen();
     }
-    this.history.push(location);
   }
 
-  render(location) {
+  _innerRender(location) {
     if (this.$currentRoute && this.$currentRoute.onLeave) {
       this.$currentRoute.onLeave(this.$currentRoute);
     }
@@ -77,18 +93,10 @@ class SimpleRouter {
       });
   }
 
-  run(mountFn, errorFn) {
-    this.unListen = history.listen((location) => {
-      this.render(location)
+  _runByLocation(location, mountFn, errorFn) {
+    return this._innerRender(location)
         .then(component => mountFn(component))
-        .catch(err => errorFn(err));
-    });
-  }
-
-  destroy() {
-    if (this.unListen) {
-      this.unListen();
-    }
+        .catch(err => errorFn && errorFn(err));
   }
 
   _getProps(params, location: Location, route) {
